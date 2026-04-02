@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v4 Entry Framework — Opportunistic Deployment Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0f14;
+  --surface: #141820;
+  --surface-2: #1a1f2a;
+  --surface-3: #222836;
+  --border: #2a3040;
+  --text: #e0e4ec;
+  --text-muted: #8892a4;
+  --text-dim: #5a6478;
+  --green: #34d399;
+  --green-dim: rgba(52,211,153,0.15);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96,165,250,0.12);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251,191,36,0.12);
+  --red: #f87171;
+  --red-dim: rgba(248,113,113,0.12);
+  --purple: #a78bfa;
+  --purple-dim: rgba(167,139,250,0.12);
+  --orange: #f97316;
+  --orange-dim: rgba(249,115,22,0.15);
+  --cyan: #22d3ee;
+  --cyan-dim: rgba(34,211,238,0.12);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Source Sans 3',sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased; }
+.container { max-width:1100px; margin:0 auto; padding:40px 24px 80px; }
+
+.header { text-align:center; margin-bottom:48px; padding-bottom:36px; border-bottom:1px solid var(--border); }
+.header h1 { font-family:'DM Serif Display',serif; font-size:2.4rem; letter-spacing:-0.02em; margin-bottom:10px; }
+.header h1 span { color:var(--orange); }
+.header .subtitle { font-size:0.9rem; color:var(--text-muted); font-weight:300; }
+.header .context { margin-top:16px; max-width:700px; margin-left:auto; margin-right:auto; font-size:0.86rem; color:var(--text-dim); font-style:italic; line-height:1.7; }
+
+.section-header { margin:48px 0 24px; display:flex; align-items:center; gap:12px; }
+.section-header .icon { font-size:1.3rem; }
+.section-header h2 { font-family:'DM Serif Display',serif; font-size:1.5rem; }
+
+/* Philosophy box */
+.philosophy { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px; margin:20px 0; }
+.philosophy h3 { font-family:'DM Serif Display',serif; font-size:1.15rem; margin-bottom:14px; }
+.phil-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
+@media(max-width:700px) { .phil-grid { grid-template-columns:1fr; } }
+.phil-card { background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:16px 18px; }
+.phil-card .name { font-family:'JetBrains Mono',monospace; font-size:0.72rem; font-weight:600; color:var(--orange); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
+.phil-card .take { font-size:0.84rem; color:var(--text-muted); line-height:1.55; }
+.phil-card .quote { font-style:italic; color:var(--green); font-size:0.82rem; margin-top:8px; padding-left:10px; border-left:2px solid var(--green-dim); }
+
+/* Regime box */
+.regime { background:linear-gradient(135deg,var(--surface) 0%,rgba(251,191,36,0.04) 100%); border:1px solid var(--amber); border-radius:12px; padding:28px; margin:20px 0; }
+.regime h3 { font-family:'DM Serif Display',serif; font-size:1.15rem; color:var(--amber); margin-bottom:12px; }
+.regime p { font-size:0.86rem; color:var(--text-muted); line-height:1.65; margin-bottom:10px; }
+.regime .signal { display:inline-block; font-family:'JetBrains Mono',monospace; font-size:0.72rem; font-weight:600; padding:3px 10px; border-radius:4px; margin-right:6px; }
+.regime .signal.caution { background:var(--amber-dim); color:var(--amber); }
+.regime .signal.go { background:var(--green-dim); color:var(--green); }
+.regime .signal.wait { background:var(--red-dim); color:var(--red); }
+
+/* Tier boxes */
+.tier { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; margin:16px 0; }
+.tier-header { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.tier-badge { font-family:'JetBrains Mono',monospace; font-size:0.68rem; font-weight:600; padding:4px 10px; border-radius:5px; text-transform:uppercase; letter-spacing:0.06em; }
+.tier-badge.t1 { background:var(--green-dim); color:var(--green); }
+.tier-badge.t2 { background:var(--blue-dim); color:var(--blue); }
+.tier-badge.t3 { background:var(--amber-dim); color:var(--amber); }
+.tier-badge.t4 { background:var(--purple-dim); color:var(--purple); }
+.tier-title { font-family:'DM Serif Display',serif; font-size:1.1rem; }
+.tier-desc { font-size:0.84rem; color:var(--text-muted); line-height:1.6; margin-bottom:16px; }
+.tier-names { display:flex; flex-wrap:wrap; gap:8px; }
+.tier-name { font-family:'JetBrains Mono',monospace; font-size:0.78rem; font-weight:600; padding:5px 12px; border-radius:6px; background:var(--surface-2); color:var(--text); border:1px solid var(--border); }
+
+/* Position cards */
+.pos-grid { display:grid; grid-template-columns:1fr; gap:16px; margin:20px 0; }
+.pos-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px; transition:border-color 0.2s; }
+.pos-card:hover { border-color:var(--text-dim); }
+.pos-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap; gap:8px; }
+.pos-ticker { font-family:'JetBrains Mono',monospace; font-size:1.1rem; font-weight:600; color:var(--text); }
+.pos-alloc { font-family:'JetBrains Mono',monospace; font-size:0.72rem; padding:3px 8px; border-radius:4px; background:var(--blue-dim); color:var(--blue); }
+.pos-theme { font-size:0.78rem; color:var(--text-dim); }
+.pos-thesis { font-size:0.84rem; color:var(--text-muted); line-height:1.55; margin-bottom:14px; }
+
+.pos-signals { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media(max-width:600px) { .pos-signals { grid-template-columns:1fr; } }
+.signal-box { background:var(--surface-2); border-radius:8px; padding:12px 14px; }
+.signal-box .label { font-family:'JetBrains Mono',monospace; font-size:0.66rem; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px; }
+.signal-box .label.entry { color:var(--green); }
+.signal-box .label.pullback { color:var(--blue); }
+.signal-box .label.risk { color:var(--red); }
+.signal-box .label.catalyst { color:var(--amber); }
+.signal-box .content { font-size:0.8rem; color:var(--text-muted); line-height:1.5; }
+
+/* Scaling playbook */
+.playbook { background:var(--surface); border:1px solid var(--orange); border-radius:12px; padding:28px; margin:24px 0; background:linear-gradient(135deg,var(--surface) 0%,rgba(249,115,22,0.04) 100%); }
+.playbook h3 { font-family:'DM Serif Display',serif; font-size:1.15rem; color:var(--orange); margin-bottom:16px; }
+.play-step { display:flex; gap:14px; padding:12px 0; border-bottom:1px solid rgba(42,48,64,0.5); }
+.play-step:last-child { border-bottom:none; }
+.play-num { font-family:'JetBrains Mono',monospace; font-size:0.9rem; font-weight:600; color:var(--orange); min-width:28px; }
+.play-text { font-size:0.85rem; color:var(--text-muted); line-height:1.6; }
+.play-text strong { color:var(--text); }
+
+.footer { margin-top:60px; padding-top:24px; border-top:1px solid var(--border); text-align:center; font-size:0.75rem; color:var(--text-dim); line-height:1.8; }
+
+.disclaimer { background:var(--red-dim); border:1px solid rgba(248,113,113,0.3); border-radius:10px; padding:16px 20px; margin:24px 0; font-size:0.8rem; color:var(--text-muted); line-height:1.6; }
+.disclaimer strong { color:var(--red); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>v4 Entry <span>Framework</span></h1>
+  <div class="subtitle">Opportunistic Deployment Guide · 15 Positions · Built from 22V Research (Visser &amp; DeBusschere)</div>
+  <div class="context">For a new portfolio built from scratch, deploying opportunistically on pullbacks. This framework answers: what to buy first, what to wait for, and what signals tell you "now."</div>
+</div>
+
+<div class="disclaimer">
+  <strong>Not investment advice.</strong> This is an analytical framework synthesized from publicly available research commentary. All investment decisions carry risk. Consult a qualified financial advisor before making investment decisions.
+</div>
+
+<!-- ═══════ 22V ENTRY PHILOSOPHY ═══════ -->
+<div class="section-header">
+  <span class="icon">🧭</span>
+  <h2>The 22V Entry Philosophy</h2>
+</div>
+
+<div class="philosophy">
+  <h3>How Visser &amp; DeBusschere Think About Timing</h3>
+  <p style="font-size:0.86rem;color:var(--text-muted);line-height:1.65;">22V doesn't chase. Their framework is: identify structural themes with multi-year runways, then use market volatility as your entry mechanism. The thesis doesn't change on a 10% pullback — the price does. The key distinction is between positions where the thesis is <em>structural</em> (buy any meaningful dip) vs. <em>tactical</em> (wait for a specific catalyst).</p>
+  
+  <div class="phil-grid">
+    <div class="phil-card">
+      <div class="name">Jordi Visser — Entry Rules</div>
+      <div class="take">Seller on rallies for the broad US market. Buyer on pullbacks for AI buildout, commodities, and scarcity names. The themes haven't changed — only sentiment has. Add to and build positions on recent pullbacks. Don't wait for the perfect bottom.</div>
+      <div class="quote">"He is supportive of stepping into well-positioned AI build-out levered names that have sold off, as those themes haven't changed."</div>
+    </div>
+    <div class="phil-card">
+      <div class="name">Dennis DeBusschere — Entry Rules</div>
+      <div class="take">Uses Equity Risk Premium (ERP) as the macro timing signal. ERP at ~5% = historically consistent with 1970s stagflation. "Difficult short but not yet an obvious buy." Volatility spikes driven by AI uncertainty are buying opportunities. Favor companies with physical assets — harder to disrupt.</div>
+      <div class="quote">"Rising AI disruption risk and concern that financial conditions may need to tighten are driving rotation toward asset-heavy, cash-returning sectors. This is a margin-of-safety trade, not a recession call."</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MARKET REGIME ═══════ -->
+<div class="section-header">
+  <span class="icon">🌡️</span>
+  <h2>Current Market Regime Assessment</h2>
+</div>
+
+<div class="regime">
+  <h3>What 22V Says About Deploying Capital NOW (April 2026)</h3>
+  <p><span class="signal caution">ERP ~5%</span> Equity risk premium at levels last seen in 1970s stagflation and post-GFC. Fair value "skewed modestly to the upside" but no clear buy signal for the broad market.</p>
+  <p><span class="signal caution">INFLATION</span> Core PCE at 3.25%, accelerating across goods AND services. Fed speed limit on growth is lower than anyone thinks. Rate cuts effectively dead through 2027.</p>
+  <p><span class="signal go">AI BUILDOUT</span> Hyperscaler capex plans accelerating, not decelerating. "Concerns that AI capex is being pulled forward are premature." Structural demand intact for power, compute, memory, networking.</p>
+  <p><span class="signal go">SCARCITY</span> Physical-world assets outperforming software. Equal-weight semis up 65% since May lows while software down 5%. Memory, silver, energy in structural shortage.</p>
+  <p><span class="signal caution">GEOPOLITICAL</span> Iran moving toward de-escalation but lasting instability in energy markets. Oil structurally elevated. Defense spending $200B+ likely.</p>
+  <p><span class="signal wait">MAG7</span> Mega-cap tech in "unified breakdown." S&P 500 difficult short but not obvious buy. Leadership vacuum makes sustained rallies unlikely near-term.</p>
+  
+  <p style="margin-top:14px;font-weight:600;color:var(--amber);">Bottom line: This is NOT a "buy everything now" market. It IS a "buy the RIGHT things on pullbacks" market. Be selective. Be patient. The scarcity trade is working — deploy capital there first.</p>
+</div>
+
+<!-- ═══════ TIERED DEPLOYMENT ═══════ -->
+<div class="section-header">
+  <span class="icon">🎯</span>
+  <h2>Tiered Deployment Plan</h2>
+</div>
+
+<div class="tier">
+  <div class="tier-header">
+    <span class="tier-badge t1">TIER 1 · BUILD FIRST</span>
+    <span class="tier-title">Universal Core — 6/6 Consensus</span>
+  </div>
+  <div class="tier-desc">Every persona agrees. Every worldview wants these. The AI power + compute thesis is the portfolio's foundation. Start here. Buy any meaningful pullback (5-10% from recent levels). These are "always building" positions — don't try to time the perfect bottom. Scale in across 3-4 tranches over weeks.</div>
+  <div class="tier-names">
+    <span class="tier-name">CEG 12%</span>
+    <span class="tier-name">AVGO 11%</span>
+    <span class="tier-name">VST 9%</span>
+  </div>
+</div>
+
+<div class="tier">
+  <div class="tier-header">
+    <span class="tier-badge t2">TIER 2 · HIGH CONVICTION</span>
+    <span class="tier-title">Near-Universal Structural — 5/6 Consensus</span>
+  </div>
+  <div class="tier-desc">Strong consensus with one dissenter each. These are structural positions with multi-year theses. Buy on defined pullbacks or when specific macro signals trigger. BTC is the monetary hedge, ESLT is the defense play, GLD is the inflation hedge, CCJ is the nuclear/AI power play. Deploy after Tier 1 core is established.</div>
+  <div class="tier-names">
+    <span class="tier-name">BTC 15%</span>
+    <span class="tier-name">ESLT 8%</span>
+    <span class="tier-name">GLD 7%</span>
+    <span class="tier-name">CCJ 7%</span>
+  </div>
+</div>
+
+<div class="tier">
+  <div class="tier-header">
+    <span class="tier-badge t3">TIER 3 · CATALYST-DEPENDENT</span>
+    <span class="tier-title">Opportunistic — 3-4/6 Consensus</span>
+  </div>
+  <div class="tier-desc">Polarized or lower consensus. These require specific catalysts or deeper pullbacks before entry. Don't rush. Wait for the right setup — an earnings beat, a geopolitical trigger, or a technical breakout/breakdown that resolves the debate. Some of these may never trigger, and that's fine.</div>
+  <div class="tier-names">
+    <span class="tier-name">STNG 5%</span>
+    <span class="tier-name">TSM 5%</span>
+    <span class="tier-name">MELI 5%</span>
+    <span class="tier-name">CORZ 3%</span>
+    <span class="tier-name">ADM 3%</span>
+    <span class="tier-name">TSLA 3%</span>
+    <span class="tier-name">IREN 1%</span>
+  </div>
+</div>
+
+<div class="tier">
+  <div class="tier-header">
+    <span class="tier-badge t4">TIER 4 · DRY POWDER</span>
+    <span class="tier-title">Cash Reserve — The "Pullback Fund"</span>
+  </div>
+  <div class="tier-desc">Cash is a position. DeBusschere says "buy pullbacks" — you need capital to do that. In a market where ERP is at 5% and the Fed can't cut, keeping 6% in T-Bills / SWVXX isn't defensive — it's offensive. This is the ammunition for when VIX spikes above 30 and Tier 1-2 names sell off 15%+.</div>
+  <div class="tier-names">
+    <span class="tier-name">Cash 6%</span>
+  </div>
+</div>
+
+<!-- ═══════ POSITION-BY-POSITION ═══════ -->
+<div class="section-header">
+  <span class="icon">📋</span>
+  <h2>Position-by-Position Entry Guide</h2>
+</div>
+
+<!-- TIER 1 -->
+<div style="margin:24px 0 8px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--green);text-transform:uppercase;letter-spacing:0.08em;">Tier 1 — Build First</div>
+
+<div class="pos-grid">
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">CEG</span> <span class="pos-theme">Constellation Energy · AI Power / Nuclear</span></div>
+    <span class="pos-alloc">12% target</span>
+  </div>
+  <div class="pos-thesis">The AI data center power bottleneck play. 22V identifies power delivery as the new constraint replacing GPUs. Constellation's nuclear fleet provides baseload clean energy that AI data centers need 24/7. Calpine acquisition expands capacity. Every persona in the debate wants this name.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Buy on any 8-12% pullback from recent levels. Current ~$270 range is already well off the $413 52-week high (~35% drawdown). The thesis strengthens as AI capex accelerates. New data center contracts are the upside catalyst.</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">First tranche: current levels ($265-280). Second tranche: $240-250 (near 2026 lows). Third tranche: $200-220 (if broader market sells off). 52-wk low: $161.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">No new data center deals announced at recent investor day. PJM capacity market regulatory changes. Nuclear regulatory headwinds. If hyperscaler capex guidance weakens in earnings.</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">Earnings May 7, 2026. Watch for new data center power purchase agreements. PJM capacity auction results. Calpine integration updates.</div></div>
+  </div>
+</div>
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">AVGO</span> <span class="pos-theme">Broadcom · AI Compute / Networking</span></div>
+    <span class="pos-alloc">11% target</span>
+  </div>
+  <div class="pos-thesis">The "whole rack" networking play. Visser's thesis is that AI infrastructure demand is expanding from GPUs to the entire data center stack — CPUs, networking, storage. Broadcom dominates custom AI accelerators (ASICs) and ultra-high-speed networking (Tomahawk switches). Revenue up 29% YoY, AI semiconductor revenue up 106% YoY.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Buy on market-wide selloffs, not AVGO-specific weakness. AI semis sell off with the index but the structural demand is unchanged. TSMC capacity fully stretched = supply constraint validates demand. Current ~$330 range.</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">First tranche: $310-330. Second tranche: $280-300 (meaningful pullback). Third tranche: $250 (extreme — would be a gift). 52-wk range: low ~$113, high ~$415.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">Non-AI business weakness (VMware integration, broadband). Hyperscaler ASIC program cancellations. TSMC supply disruption (Taiwan risk). Earnings miss on the infrastructure software segment.</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">Earnings June 4, 2026. Watch hyperscaler capex guidance (MSFT, GOOGL, AMZN earnings in late April). New ASIC design wins. Tomahawk 6 adoption.</div></div>
+  </div>
+</div>
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">VST</span> <span class="pos-theme">Vistra · AI Power</span></div>
+    <span class="pos-alloc">9% target</span>
+  </div>
+  <div class="pos-thesis">Second power play alongside CEG. Vistra operates natural gas and nuclear generation in ERCOT (Texas) and PJM. Benefits from the same AI data center power demand thesis. Texas is a primary data center build-out geography. More levered to natural gas prices than CEG.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Buy alongside CEG on power sector pullbacks. These two move together. VST offers more upside leverage but also more gas-price sensitivity. Buy when nat gas stabilizes or data center demand news hits.</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">Scale in on 10-15% dips from recent levels. Watch for ERCOT summer demand catalysts. More volatile than CEG — use wider tranches.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">Natural gas price collapse. ERCOT regulatory changes. Texas grid reliability concerns pushing policy against data centers. Broader utilities selloff on rate fears.</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">Earnings (watch calendar). Summer ERCOT demand forecasts. New data center interconnection agreements in Texas. PJM capacity auction results.</div></div>
+  </div>
+</div>
+
+</div>
+
+<!-- TIER 2 -->
+<div style="margin:32px 0 8px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--blue);text-transform:uppercase;letter-spacing:0.08em;">Tier 2 — High Conviction Structural</div>
+
+<div class="pos-grid">
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">BTC</span> <span class="pos-theme">Bitcoin · Scarce Money / Digital Infrastructure</span></div>
+    <span class="pos-alloc">15% target</span>
+  </div>
+  <div class="pos-thesis">The monetary system hedge. Visser's structural thesis: debt-to-GDP at 122% means aggressive tightening is systemically dangerous, forcing policymakers to tolerate inflation — BTC is the exit from a system that can no longer enforce discipline. Compares the current setup to "Micron before its 70-to-400 move." Lyn Alden's "Broken Money" thesis adds: zero terminal supply growth vs. 7% broad money growth.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Current ~$67K range. Visser says BTC is "in accumulation mode." Buy on risk-off selloffs when BTC correlates with equities temporarily. The structural thesis is independent of short-term price action. Dollar-cost average the largest position.</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">First tranche: current levels ($65-70K). Second tranche: $55-60K (meaningful pullback). Third tranche: $45-50K (extreme risk-off, would be Visser's "gift" entry). BTC is volatile — expect 20-30% drawdowns within uptrends.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">Visser notes BTC remains "tethered to SaaS via venture capital overhang" — correlation may take time to break. Regulatory crackdown. If Fed somehow achieves a Volcker-style tightening (unlikely at 122% debt-to-GDP but would kill the thesis).</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">Institutional adoption cycle (ETF flows). Fed policy statements confirming rate cuts are dead. Any sovereign debt crisis or YCC discussion. Halving supply dynamics (already occurred but deflationary pressure compounds).</div></div>
+  </div>
+</div>
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">ESLT</span> <span class="pos-theme">Elbit Systems · Defense</span></div>
+    <span class="pos-alloc">8% target</span>
+  </div>
+  <div class="pos-thesis">The defense spending play. 5/6 consensus — only Leopold dissents. Zeihan: "Every military on Earth needs more missiles. Production takes years. Elbit is already there." DeBusschere: physical-world companies with hard assets benefit most from current rotation. Defense supplemental spending likely $200B+ floor.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Buy on any Iran de-escalation selloff — counterintuitive, but defense spending is structural (years of procurement), not tied to any single conflict. A de-escalation dip in defense stocks is a gift because the spending is already committed.</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">Scale in on 5-10% pullbacks from recent levels. ESLT is less volatile than most portfolio names. Israeli defense stocks can gap on Mideast headlines — use limit orders.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">Major peace deal that structurally reduces global defense budgets (low probability). Israel-specific political risk. Currency risk (shekel-denominated revenue). Defense budget sequestration in the US.</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">Defense supplemental vote in Congress (spring 2026). NATO member defense spending commitments. Any new conflict escalation = immediate catalyst. Quarterly earnings with backlog updates.</div></div>
+  </div>
+</div>
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">GLD</span> <span class="pos-theme">Gold · Monetary / Inflation Hedge</span></div>
+    <span class="pos-alloc">7% target</span>
+  </div>
+  <div class="pos-thesis">The inflation and monetary debasement hedge. 5/6 consensus. Crabtree's defensive anchor (15%), Lyn's monetary thesis (10%), Zeihan's geopolitical hedge (10%). Visser prefers silver but gold still fits the commodity scarcity framework. Central bank gold buying continues structurally.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Buy on any dollar strength / real rate spike that pushes gold down temporarily. Gold tends to sell off when the dollar rallies — use that as the entry. Also buy if equities sell off hard (gold initially drops with everything in a liquidity crisis, then recovers first).</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">Scale in on 5-8% dips. Gold is the least volatile position in the portfolio — don't need to wait for massive pullbacks. Build steadily.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">Sustained real rate increase (Fed aggressively tightening AND inflation falling — the opposite of current regime). Strong dollar bull market. Risk-on euphoria reducing hedge demand.</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">CPI/PCE prints above expectations. Any sovereign debt stress. Central bank gold purchase announcements. De-dollarization developments. Fed confirming extended pause.</div></div>
+  </div>
+</div>
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">CCJ</span> <span class="pos-theme">Cameco · Uranium / Nuclear</span></div>
+    <span class="pos-alloc">7% target</span>
+  </div>
+  <div class="pos-thesis">The uranium supply/demand play. AI data centers need always-on baseload power = nuclear. New reactor builds and life extensions increasing uranium demand while supply remains constrained. Cameco is the Western world's largest publicly traded uranium producer. 5/6 consensus.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Buy on uranium spot price dips or broader commodity selloffs. CCJ moves with uranium spot — when spot pulls back 10%+, that's the entry. Also buy on any nuclear policy news (new plant approvals, life extensions).</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">Scale in on 10-15% pullbacks. Uranium is volatile and CCJ amplifies that. Patient entry over multiple tranches is essential.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">Nuclear accident anywhere in the world. Major new uranium supply coming online (Kazakhstan expansion). If AI data center growth disappoints and baseload power demand forecasts are revised down.</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">New reactor approvals (US, Europe, Asia). Utility long-term uranium contracting cycle. DOE Strategic Petroleum Reserve equivalent for uranium. SMR (small modular reactor) deployment timelines.</div></div>
+  </div>
+</div>
+
+</div>
+
+<!-- TIER 3 -->
+<div style="margin:32px 0 8px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--amber);text-transform:uppercase;letter-spacing:0.08em;">Tier 3 — Catalyst-Dependent / Opportunistic</div>
+
+<div class="pos-grid">
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">STNG</span> <span class="pos-theme">Scorpio Tankers · Energy / Tankers</span></div>
+    <span class="pos-alloc">5% target</span>
+  </div>
+  <div class="pos-thesis">The energy scarcity and Hormuz disruption play. 22V (via Goehring): energy may be "the cheapest major asset class in the world." Hormuz closure affecting ~20% of global oil/LNG trade. Visser's commodity scarcity framework supports. Only 3/6 consensus — this is a geopolitical bet.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Buy on oil price spikes (tanker rates rise with oil). Buy when Hormuz tensions escalate — this is the opposite of "buy the dip." STNG goes UP when things get worse in energy markets. Also buy if tanker day rates spike above $40K/day.</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">Wait for oil/tanker rate pullbacks if you want a cheaper entry. If oil drops to $70-75, that's the tanker buy zone. If Hormuz de-escalates temporarily, tanker stocks dip = entry point for the structural thesis.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">Full Iran peace deal reopening Hormuz. Global recession crushing oil demand. New tanker supply hitting the water (long lead times = unlikely near-term).</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">Hormuz escalation/de-escalation headlines. OPEC decisions. Tanker day rate reports. Oil breaking above $100 (Visser's key level). Insurance rates for Hormuz transit.</div></div>
+  </div>
+</div>
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">TSM</span> <span class="pos-theme">TSMC · AI Foundry</span></div>
+    <span class="pos-alloc">5% target</span>
+  </div>
+  <div class="pos-thesis">The irreplaceable AI semiconductor foundry. Makes the chips that power everything else in the portfolio. AVGO's capacity is "fully stretched" at TSMC. 4/6 consensus — Zeihan says zero (Taiwan risk), Crabtree says zero. This is the highest-reward, highest-risk semiconductor position.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Buy ONLY on significant pullbacks driven by Taiwan fear (not earnings weakness). Taiwan headlines create temporary selloffs in a stock with monopolistic market position. That's the entry. Also buy if Arizona fab timelines accelerate (de-risks Taiwan).</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">Wait for 15-20% pullbacks from recent levels. TSM is the most binary name in the portfolio. Small position size (5%) reflects the Taiwan risk — don't size up beyond that.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">Any Chinese military escalation around Taiwan. US-China semiconductor export controls tightening. Revenue concentration risk if hyperscaler ASIC programs diversify away from TSMC.</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">Earnings (watch for capacity utilization and pricing power). Arizona fab production timeline updates. Any US semiconductor policy changes. Hyperscaler order book commentary.</div></div>
+  </div>
+</div>
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">MELI</span> <span class="pos-theme">MercadoLibre · Emerging Markets / Brazil</span></div>
+    <span class="pos-alloc">5% target</span>
+  </div>
+  <div class="pos-thesis">The Brazil/LatAm AI infrastructure hub play. Visser wrote a full research note: Brazil is "structurally advantaged" for AI — renewable energy surplus, falling real rates, mineral leverage, institutional capacity to host global compute. MELI is the LatAm digital economy proxy. 4/6 consensus.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Buy on EM selloffs driven by dollar strength or risk-off moves. MELI tends to sell off with EM broadly even though its fundamentals are company-specific. Also buy on any Brazilian rate cut cycle acceleration. Visser: "Buy EWZ on pullbacks."</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">Wait for 10-15% pullbacks. MELI is volatile given EM exposure. FX (BRL) moves create entry opportunities independent of company fundamentals.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">Brazilian political instability. BRL collapse. EM contagion from broader risk-off. Company-specific: fintech competition, credit quality deterioration in Mercado Pago.</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">Brazilian rate cuts. AI infrastructure investment announcements in Brazil. MELI earnings (e-commerce + fintech growth). IEEPA tariff reductions for Brazil (already coming down from 30-40% to mid-teens).</div></div>
+  </div>
+</div>
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">ADM</span> <span class="pos-theme">Archer-Daniels-Midland · Agriculture</span></div>
+    <span class="pos-alloc">3% target</span>
+  </div>
+  <div class="pos-thesis">The agricultural commodity scarcity play. Zeihan's demographics/food security thesis + Crabtree's cash-flow discipline. Visser's broader "commodity and scarcity names" framework. Not a primary 22V call but fits the physical-world asset rotation. 3/6 consensus.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Buy on agricultural commodity spikes (grain prices, soybean). Buy if weather events disrupt global food supply. ADM is a spread business — buy when processing margins widen.</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">Small position (3%) = can enter in one or two tranches. Wait for meaningful pullback to value levels. ADM has been beaten down — check if accounting issues are fully resolved.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">Accounting concerns resurfacing. Grain glut from good global harvests. Processing margin compression. Management credibility questions.</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">USDA crop reports. El Niño / La Niña forecasts. Global food inflation data. ADM earnings showing clean accounting and margin recovery.</div></div>
+  </div>
+</div>
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">CORZ</span> <span class="pos-theme">Core Scientific · Miner → AI Hosting</span></div>
+    <span class="pos-alloc">3% target</span>
+  </div>
+  <div class="pos-thesis">Leopold's #1 conviction — the largest power footprint transitioning from Bitcoin mining to AI hosting. 22V gives zero (not "the rack"). This is a bet on Leopold being right that miners become the AI infrastructure layer. 3/6 consensus. Highly speculative at this size.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Buy ONLY on confirmed AI hosting contract announcements. The thesis requires CORZ to successfully pivot from mining to AI hosting — don't buy on hope, buy on proof. Also buy if BTC drops hard (CORZ gets cheap) and the AI hosting pipeline is intact.</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">At 3% allocation, this is a single-tranche entry when catalyst triggers. Don't scale into this — wait for the signal, buy once.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">AI hosting pivot fails. BTC price collapse making mining uneconomic. Competition from purpose-built data centers with better power infrastructure. Bankruptcy history creating financing constraints.</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">New AI hosting contracts (Microsoft, CoreWeave, etc.). Power purchase agreement expansions. BTC hash rate / profitability metrics. Quarterly pivot progress updates.</div></div>
+  </div>
+</div>
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">TSLA</span> <span class="pos-theme">Tesla · Autonomy / Robotics</span></div>
+    <span class="pos-alloc">3% target</span>
+  </div>
+  <div class="pos-thesis">The autonomy and robotics play — not the EV company. Dave/Moonshots thesis: robotaxi + Optimus humanoid robot. Weakest consensus equity in portfolio (3/6). 22V gives zero — DeBusschere favors physical AI infrastructure over consumer mega-caps. Only here because the autonomy optionality is non-zero.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Buy ONLY on robotaxi regulatory approval milestones or Optimus deployment news. Don't buy on EV delivery numbers — that's not the thesis. Austin robotaxi is operating without safety monitor — watch for scaled rollout announcements.</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">TSLA is the most volatile name in the portfolio. At 3%, single-tranche entry on catalyst. Don't average down — the thesis is binary.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">Robotaxi regulatory setback. Elon distraction risk (xAI, SpaceX, government role). EV margin compression. Competition from Waymo. 22V says Mag7 in "unified breakdown" — TSLA included.</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">Robotaxi expansion beyond Austin. Optimus deployment updates. FSD insurance rate reductions (Lemonade 50% cut is a leading indicator). Earnings with autonomy revenue breakout.</div></div>
+  </div>
+</div>
+
+<div class="pos-card">
+  <div class="pos-top">
+    <div><span class="pos-ticker">IREN</span> <span class="pos-theme">Iris Energy · Miner + AI</span></div>
+    <span class="pos-alloc">1% target</span>
+  </div>
+  <div class="pos-thesis">Smallest position. Similar thesis to CORZ but with less conviction. Leopold/Dave see mining infrastructure as future AI compute layer. 22V gives zero. At 1%, this is pure optionality — if the miner→AI pivot thesis plays out, even a small position benefits.</div>
+  <div class="pos-signals">
+    <div class="signal-box"><div class="label entry">Entry Trigger</div><div class="content">Same as CORZ — buy on confirmed AI hosting contracts. At 1%, this is a single-entry position. If CORZ works, IREN likely works too.</div></div>
+    <div class="signal-box"><div class="label pullback">Pullback Levels</div><div class="content">One tranche. At 1% allocation, timing matters less than the binary outcome.</div></div>
+    <div class="signal-box"><div class="label risk">Risk Signal</div><div class="content">Same as CORZ. Smaller company = more execution risk. Less diversified power footprint.</div></div>
+    <div class="signal-box"><div class="label catalyst">Next Catalyst</div><div class="content">AI hosting contract wins. Power expansion milestones. If CORZ pivot succeeds, validates the broader miner thesis.</div></div>
+  </div>
+</div>
+
+</div>
+
+<!-- ═══════ SCALING PLAYBOOK ═══════ -->
+<div class="section-header">
+  <span class="icon">📐</span>
+  <h2>The Scaling Playbook</h2>
+</div>
+
+<div class="playbook">
+  <h3>How to Deploy $X Into This Portfolio Over Time</h3>
+  
+  <div class="play-step">
+    <span class="play-num">01</span>
+    <div class="play-text"><strong>Day 1: Establish the cash position (6%).</strong> Park it in SWVXX or short-term T-Bills. This is your pullback ammunition. Don't touch it until a VIX spike or meaningful market selloff creates the entry you're waiting for.</div>
+  </div>
+  
+  <div class="play-step">
+    <span class="play-num">02</span>
+    <div class="play-text"><strong>Week 1-2: Build Tier 1 core (CEG, AVGO, VST) to 50% of target weight.</strong> These are the universal positions. Don't wait for the perfect price — start building. Use limit orders 2-3% below the current ask to capture intraday volatility. If the market pulls back 5%+, accelerate to 75% of target.</div>
+  </div>
+  
+  <div class="play-step">
+    <span class="play-num">03</span>
+    <div class="play-text"><strong>Week 2-4: Begin Tier 2 (BTC, ESLT, GLD, CCJ) at 33% of target weight.</strong> BTC: start a recurring buy (daily or weekly). GLD: build steadily — it's your portfolio stabilizer. ESLT and CCJ: use limit orders on dips. Don't rush — these are structural positions with multi-year horizons.</div>
+  </div>
+  
+  <div class="play-step">
+    <span class="play-num">04</span>
+    <div class="play-text"><strong>Month 1-2: Fill Tier 1 to full weight on any pullbacks.</strong> If CEG, AVGO, or VST pull back 8-12% from your initial entry, add aggressively to bring them to full target weight. This is the Visser approach: "Buy AI buildout names on weakness — the themes haven't changed."</div>
+  </div>
+  
+  <div class="play-step">
+    <span class="play-num">05</span>
+    <div class="play-text"><strong>Month 2-3: Fill Tier 2 to full weight. Begin watching Tier 3 catalysts.</strong> BTC should be close to 15% through regular buys. ESLT, GLD, CCJ filled on pullbacks. Now start watching for Tier 3 entry signals — earnings, geopolitical triggers, technical breakouts.</div>
+  </div>
+  
+  <div class="play-step">
+    <span class="play-num">06</span>
+    <div class="play-text"><strong>Month 3+: Deploy Tier 3 opportunistically as catalysts trigger.</strong> STNG on oil spikes. MELI on EM dips. TSM on Taiwan fear selloffs. CORZ/IREN on confirmed AI hosting deals. TSLA on robotaxi milestones. ADM on agricultural disruption. These may take months to trigger — patience is the edge.</div>
+  </div>
+  
+  <div class="play-step">
+    <span class="play-num">07</span>
+    <div class="play-text"><strong>Ongoing: Use the Jacobson framework for hedging.</strong> When IV is elevated (VIX > 25), sell upside calls on your largest positions to generate income and fund downside protection. This lowers your cost basis while maintaining exposure. Sell CEG/AVGO covered calls at 15-20% above current price to fund put spreads on SPY.</div>
+  </div>
+</div>
+
+<!-- ═══════ KEY SIGNALS DASHBOARD ═══════ -->
+<div class="section-header">
+  <span class="icon">📡</span>
+  <h2>Macro Signals to Watch (Buy/Wait Triggers)</h2>
+</div>
+
+<div class="philosophy">
+  <div class="phil-grid">
+    <div class="phil-card">
+      <div class="name">🟢 BUY signals</div>
+      <div class="take">
+        VIX spikes above 30 (buy Tier 1-2 aggressively).<br>
+        Oil breaks above $100 (buy STNG, energy names).<br>
+        PMI breaks above 50 (buy cyclicals, small caps).<br>
+        Iran de-escalation headlines (defense stocks dip = buy ESLT).<br>
+        Hyperscaler earnings confirm capex acceleration (buy AVGO, CEG, VST).<br>
+        Dollar weakness (buy GLD, BTC, MELI).<br>
+        Memory/NAND supply tightening news (validates whole thesis).
+      </div>
+    </div>
+    <div class="phil-card">
+      <div class="name">🔴 WAIT signals</div>
+      <div class="take">
+        Core PCE accelerating above 4% (Fed forced to tighten aggressively).<br>
+        High-yield credit spreads blowing out (systemic risk, not just equity repricing).<br>
+        Hyperscaler capex guidance cuts (would undermine entire AI infrastructure thesis).<br>
+        Oil above $120 sustained (demand destruction, broader economic damage).<br>
+        VIX sustained above 40 (market in panic — wait for stabilization before deploying).<br>
+        Taiwan military escalation (pause TSM, reassess AVGO supply chain).
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  📋 v4 Entry Framework — Opportunistic Deployment Guide · April 2, 2026<br>
+  Companion to Master Portfolio v4 · Built from 22V Research (Visser &amp; DeBusschere) · SENTINEL/PostgreSQL<br>
+  Not investment advice. All investment decisions carry risk. Consult a qualified financial advisor.
+</div>
+
+</div>
+</body>
+</html>
